@@ -14,10 +14,10 @@ variable "health_check_path" {
 }
 
 ## Vars for IP Origin Pool
-variable "loadbalancer_algorithm" {
-  type    = string
-  default = "ROUND ROBIN"
-}
+# variable "loadbalancer_algorithm" {
+#   type    = string
+#   default = "ROUND ROBIN"
+# }
 
 variable "ip_origin_pool_port" {
   type    = number
@@ -34,8 +34,10 @@ variable "origin_pool_virtual_site" {
 
 ## Load Balancer
 variable "domains" {
+  type = string
 }
 
 variable "http_port" {
+  type = number
   default = 80
 }
