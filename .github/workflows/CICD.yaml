@@ -110,9 +110,9 @@ jobs:
       run: |
         terraform plan
 
-    - name: Tofu Apply
+    - name: Terraform Apply
       env:
         VES_P12_PASSWORD: ${{ secrets.VES_P12_PASSWORD }}
         VES_P12_CONTENT: ${{ secrets.VES_P12_CONTENT }}
       run: |
-        tofu apply -auto-approve
+        terraform apply -auto-approve
