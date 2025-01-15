@@ -1,0 +1,118 @@
+name: F5XC CI/CD
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["dev"]
+    paths-ignore:
+      - '**/**.md'
+      - '**/**.png'
+
+permissions:
+  id-token: write
+  contents: read
+  actions: read
+
+jobs:
+  Integration:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ vars.AWS_REGION }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+
+    - name: STS Get-Caller-Identity
+      run: |
+        aws sts get-caller-identity
+
+    - name: Setup TFLint
+      uses: terraform-linters/setup-tflint@v4
+      with:
+        tflint_version: v0.52.0
+
+    - name: Show version
+      run: |
+        tflint --version
+
+    - name: Init TFLint
+      run: |
+        tflint --init
+
+    - name: Run TFLint
+      run: |
+        tflint -f compact
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.10.4"
+
+    - name: Terraform Init
+      run: |
+        terraform init
+
+    - name: Terraform Fmt
+      run: |
+        terraform fmt --recursive -check
+
+    - name: Terraform Validate
+      run: |
+        terraform validate
+
+    - name: Terraform Plan
+      env:
+        VES_P12_PASSWORD: ${{ secrets.VES_P12_PASSWORD }}
+        VES_P12_CONTENT: ${{ secrets.VES_P12_CONTENT }}
+      run: |
+        terraform plan
+
+  Deployment:
+    runs-on: ubuntu-latest
+    needs: Integration
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ vars.AWS_REGION }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+
+    - name: STS Get-Caller-Identity
+      run: |
+        aws sts get-caller-identity
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.10.4"
+
+    - name: Terraform Init
+      run: |
+        terraform init
+
+    - name: Terraform Plan
+      env:
+        VES_P12_PASSWORD: ${{ secrets.VES_P12_PASSWORD }}
+        VES_P12_CONTENT: ${{ secrets.VES_P12_CONTENT }}
+      run: |
+        terraform plan
+
+    - name: Tofu Apply
+      env:
+        VES_P12_PASSWORD: ${{ secrets.VES_P12_PASSWORD }}
+        VES_P12_CONTENT: ${{ secrets.VES_P12_CONTENT }}
+      run: |
+        tofu apply -auto-approve
