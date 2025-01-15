@@ -38,6 +38,6 @@ variable "domains" {
 }
 
 variable "http_port" {
-  type = number
+  type    = number
   default = 80
 }

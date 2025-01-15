@@ -23,7 +23,7 @@ resource "volterra_http_loadbalancer" "load_balancer" {
     priority = var.priority
   }
   http {
-    port = var.http_port
+    port                 = var.http_port
     dns_volterra_managed = true
   }
   no_challenge = true
