@@ -38,8 +38,5 @@ terraform.rc
 # .envrc
 .envrc
 
-# .txt
-*.txt
-
 # p12
 *.p12
